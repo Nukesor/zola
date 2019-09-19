@@ -45,6 +45,10 @@ pub enum ResizeOp {
     /// height preserving aspect ratio.
     /// Either dimension may end up being smaller, but never larger than specified.
     Fit(u32, u32),
+    /// If the image is larger than the specified width or height, scales the image
+    /// such that it fits within the specified width and height preserving aspect ratio.
+    /// Either dimension may end up being smaller, but never larger than specified.
+    ShrinkFit(u32, u32),
     /// Scales the image such that it fills the specified width and height.
     /// Output will always have the exact dimensions specified.
     /// The part of the image that doesn't fit in the thumbnail due to differing
@@ -70,7 +74,7 @@ impl ResizeOp {
                         .into());
                 }
             }
-            "scale" | "fit" | "fill" => {
+            "scale" | "fit" | "fill" | "shrink_fit" => {
                 if width.is_none() || height.is_none() {
                     return Err(
                         format!("op={} requires a `width` and `height` argument", op).into()
@@ -85,6 +89,7 @@ impl ResizeOp {
             "fit_width" => FitWidth(width.unwrap()),
             "fit_height" => FitHeight(height.unwrap()),
             "fit" => Fit(width.unwrap(), height.unwrap()),
+            "shrink_fit" => ShrinkFit(width.unwrap(), height.unwrap()),
             "fill" => Fill(width.unwrap(), height.unwrap()),
             _ => unreachable!(),
         })
@@ -98,6 +103,7 @@ impl ResizeOp {
             FitWidth(w) => Some(w),
             FitHeight(_) => None,
             Fit(w, _) => Some(w),
+            ShrinkFit(w, _) => Some(w),
             Fill(w, _) => Some(w),
         }
     }
@@ -110,6 +116,7 @@ impl ResizeOp {
             FitWidth(_) => None,
             FitHeight(h) => Some(h),
             Fit(_, h) => Some(h),
+            ShrinkFit(_, h) => Some(h),
             Fill(_, h) => Some(h),
         }
     }
@@ -125,6 +132,7 @@ impl From<ResizeOp> for u8 {
             FitHeight(_) => 3,
             Fit(_, _) => 4,
             Fill(_, _) => 5,
+            ShrinkFit(_, _) => 6,
         }
     }
 }
@@ -267,6 +275,13 @@ impl ImageOp {
             FitWidth(w) => img.resize(w, u32::max_value(), RESIZE_FILTER),
             FitHeight(h) => img.resize(u32::max_value(), h, RESIZE_FILTER),
             Fit(w, h) => img.resize(w, h, RESIZE_FILTER),
+            ShrinkFit(w, h) => {
+                if img_w > w || img_h > h {
+                    img.resize(w, h, RESIZE_FILTER)
+                } else {
+                    img
+                }
+            },
             Fill(w, h) => {
                 let factor_w = img_w as f32 / w as f32;
                 let factor_h = img_h as f32 / h as f32;

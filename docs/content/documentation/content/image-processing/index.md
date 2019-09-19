@@ -21,6 +21,7 @@ resize_image(path, width, height, op, format, quality)
     - `"fit_width"`
     - `"fit_height"`
     - `"fit"`
+    - `"shrink_fit"`
     - `"fill"`
 
   What each of these does is explained below. The default is `"fill"`.
@@ -85,6 +86,21 @@ The source for all examples is this 300 × 380 pixels image:
   `resize_image(..., width=150, height=150, op="fit")`
 
   {{ resize_image(path="documentation/content/image-processing/01-zola.png", width=150, height=150, op="fit") }}
+
+### **`"shrink_fit"`**
+  Like `"fit"`, but only resize, if the image is bigger than one of the specified dimensions.
+  This mode is handy, if e.g. images are automatically shrinked to certain sizes in a shortcode for mobile optimization.
+  Resizes the image such that the result fits within `width` and `height` preserving aspect ratio. This means that both width or height
+  will be at max `width` and `height`, respectively, but possibly one of them smaller so as to preserve the aspect ratio.
+
+  `resize_image(..., width=500, height=500, op="shrink_fit")`
+
+  {{ resize_image(path="documentation/content/image-processing/01-zola.png", width=500, height=500, op="shrink_fit") }}
+
+  `resize_image(..., width=150, height=150, op="shrink_fit")`
+
+  {{ resize_image(path="documentation/content/image-processing/01-zola.png", width=150, height=150, op="shrink_fit") }}
+
 
 ### **`"fill"`**
   This is the default operation. It takes the image's center part with the same aspect ratio as the `width` & `height` given and resizes that
